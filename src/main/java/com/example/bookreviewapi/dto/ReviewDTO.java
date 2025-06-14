@@ -8,5 +8,6 @@ public class ReviewDTO {
     private Long id;
     private String comment;
     private int rating;
+    private String reviewer;
 
 }

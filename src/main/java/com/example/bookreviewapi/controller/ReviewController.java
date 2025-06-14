@@ -1,7 +1,12 @@
 package com.example.bookreviewapi.controller;
 
+import com.example.bookreviewapi.dto.CreateReviewDTO;
+import com.example.bookreviewapi.dto.ReviewDTO;
+import com.example.bookreviewapi.mapper.ReviewMapper;
 import com.example.bookreviewapi.model.Review;
 import com.example.bookreviewapi.service.ReviewService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,13 +29,19 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<Review> addReview(@PathVariable Long bookId, @RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.saveReview(bookId, review));
+    public ResponseEntity<ReviewDTO> addReview(@PathVariable Long bookId, @RequestBody @Valid CreateReviewDTO CreateReviewDTO) {
+        Review saveReview = reviewService.saveReview(bookId, ReviewMapper.toEntity(CreateReviewDTO));
+        return ResponseEntity.ok(ReviewMapper.toDTO(saveReview));
     }
 
     @GetMapping
-    public ResponseEntity<List<Review>> getReviewsByBookId (@PathVariable Long bookId) {
-        return ResponseEntity.ok(reviewService.getReviewsByBookId(bookId));
+    public ResponseEntity<List<ReviewDTO>> getReviewsByBookId (@PathVariable Long bookId) {
+        List<Review> getReview = reviewService.getReviewsByBookId(bookId);
+        List<ReviewDTO> dtos = getReview.stream()
+            .map(ReviewMapper::toDTO)
+            .toList();
+        
+        return ResponseEntity.ok(dtos);
     }
     
 }

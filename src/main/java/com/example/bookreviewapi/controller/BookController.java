@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.http.ResponseEntity;
 import com.example.bookreviewapi.service.BookService;
+
+import jakarta.validation.Valid;
+
+import com.example.bookreviewapi.mapper.BookMapper;
+import com.example.bookreviewapi.dto.BookDTO;
+import com.example.bookreviewapi.dto.CreateBookDTO;
 import com.example.bookreviewapi.model.Book;
 
 import java.util.List;
@@ -24,19 +30,26 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    // Implement the validation logic in the CreateBookDTO.java
     @PostMapping
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        return ResponseEntity.ok(bookService.saveBook(book));
+    public ResponseEntity<BookDTO> addBook(@RequestBody @Valid CreateBookDTO createBookDTO) {
+        Book savedBook = bookService.saveBook(BookMapper.toEntity(createBookDTO)); // --- No instance required (static method). Called the class name directly.
+        return ResponseEntity.ok(BookMapper.toDTO(savedBook)); // -- Returning the saved book as a DTO.
     }
 
     @GetMapping
-    public ResponseEntity<List<Book>> getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
+    public ResponseEntity<List<BookDTO>> getAllBooks() {
+        List<BookDTO> bookDTO = bookService.getAllBooks().stream()
+            .map(BookMapper::toDTO)
+            .toList();
+        return ResponseEntity.ok(bookDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
-        return ResponseEntity.ok(bookService.getBookByIdOrThrow(id));
+    public ResponseEntity<BookDTO> getBookById(@PathVariable Long id) {
+        Book book = bookService.getBookByIdOrThrow(id);
+        BookDTO dto = BookMapper.toDTO(book);
+        return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
