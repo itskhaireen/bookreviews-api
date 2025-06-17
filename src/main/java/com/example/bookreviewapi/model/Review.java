@@ -20,6 +20,6 @@ public class Review {
     private int rating; // Rating out of 5
 
     @ManyToOne
-    @JoinColumn(name = "book_id")
+    @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 }
