@@ -46,9 +46,10 @@ public class BookServiceImpl implements BookService {
         Book bookRating = getBookByIdOrThrow(bookId);
         List<Review> reviews = bookRating.getReviews();
 
-        if (reviews.isEmpty()) {
+        if (reviews == null || reviews.isEmpty()) {
             return 0.0;
         }
+
         // Calculate the average rating
         double averageRating = reviews.stream()
                 .mapToInt(Review::getRating)

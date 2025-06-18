@@ -6,12 +6,10 @@ import com.example.bookreviewapi.model.Review;
 import com.example.bookreviewapi.repository.BookRepository;
 import com.example.bookreviewapi.repository.ReviewRepository;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
@@ -127,41 +125,185 @@ class BookServiceImplTest {
         verify(bookRepository, times(1)).findAll();
 
     }
-
+    
     @Test
-    void getAverageRating_shouldReturnAverageOfRatings() {
+    void getAverageRating_whenBookExistsWithReviews_shouldReturnCorrectAverage() {
         // Arrange
+        Long bookId = 1L;
+        
+        // Create reviews
         Review review1 = new Review();
+        review1.setId(1L);
         review1.setRating(4);
-
+        review1.setReviewer("John");
+        review1.setComment("Great book!");
+        
         Review review2 = new Review();
+        review2.setId(2L);
         review2.setRating(5);
-
-        List<Review> mockReviews = List.of(review1, review2);
-
-        when(reviewRepository.findByBookId(1L)).thenReturn(mockReviews);
-
+        review2.setReviewer("Jane");
+        review2.setComment("Excellent!");
+        
+        Review review3 = new Review();
+        review3.setId(3L);
+        review3.setRating(3);
+        review3.setReviewer("Bob");
+        review3.setComment("Good book");
+        
+        // Create book with reviews
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setReviews(List.of(review1, review2, review3));
+        
+        // Mock the repository to return our book
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        
         // Act
-        double average = bookService.getAverageRating(1L);
-
+        double result = bookService.getAverageRating(bookId);
+        
         // Assert
-        assertEquals(4.5, average);
-
-        verify(reviewRepository, times(1)).findByBookId(1L);
-    }
-
-    @Test
-    void getAverageRating_shouldReturnZeroWhenNoReviews() {
-        // Arrange
-        when(reviewRepository.findByBookId(1L)).thenReturn(Collections.emptyList());
-
-        // Act
-        double average = bookService.getAverageRating(1L);
-
-        // Assert
-        assertEquals(0.0, average);
-
-        verify(reviewRepository, times(1)).findByBookId(1L);
+        // Expected: (4 + 5 + 3) / 3 = 12 / 3 = 4.0
+        assertEquals(4.0, result, 0.01);
+        
+        // Verify that getBookByIdOrThrow was called (indirectly through repository)
+        verify(bookRepository, times(1)).findById(bookId);
     }
     
+    @Test
+    void getAverageRating_whenBookExistsButNoReviews_shouldReturnZero() {
+        // Arrange
+        Long bookId = 1L;
+        
+        // Create book with empty reviews list
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setReviews(List.of()); // Empty list
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        
+        // Act
+        double result = bookService.getAverageRating(bookId);
+        
+        // Assert
+        assertEquals(0.0, result, 0.01);
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+    
+    @Test
+    void getAverageRating_whenBookExistsButReviewsIsNull_shouldReturnZero() {
+        // Arrange
+        Long bookId = 1L;
+        
+        // Create book with null reviews
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setReviews(null); // Null reviews
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        
+        // Act
+        double result = bookService.getAverageRating(bookId);
+        
+        // Assert
+        assertEquals(0.0, result, 0.01);
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+    
+    @Test
+    void getAverageRating_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
+        // Arrange
+        Long bookId = 999L;
+        
+        // Mock repository to return empty (book not found)
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        assertThrows(BookNotFoundException.class, () -> bookService.getAverageRating(bookId));
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+    
+    @Test
+    void getAverageRating_whenBookHasSingleReview_shouldReturnThatRating() {
+        // Arrange
+        Long bookId = 1L;
+        
+        // Create single review
+        Review review = new Review();
+        review.setId(1L);
+        review.setRating(5);
+        review.setReviewer("Single Reviewer");
+        review.setComment("Amazing book!");
+        
+        // Create book with single review
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setReviews(List.of(review));
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        
+        // Act
+        double result = bookService.getAverageRating(bookId);
+        
+        // Assert
+        assertEquals(5.0, result, 0.01);
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+    
+    @Test
+    void getAverageRating_whenBookHasReviewsWithDecimalResult_shouldReturnCorrectAverage() {
+        // Arrange
+        Long bookId = 1L;
+        
+        // Create reviews that will result in decimal average
+        Review review1 = new Review();
+        review1.setId(1L);
+        review1.setRating(3);
+        
+        Review review2 = new Review();
+        review2.setId(2L);
+        review2.setRating(4);
+        
+        Review review3 = new Review();
+        review3.setId(3L);
+        review3.setRating(5);
+        
+        Review review4 = new Review();
+        review4.setId(4L);
+        review4.setRating(2);
+        
+        // Create book with reviews
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
+        book.setReviews(List.of(review1, review2, review3, review4));
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        
+        // Act
+        double result = bookService.getAverageRating(bookId);
+        
+        // Assert
+        // Expected: (3 + 4 + 5 + 2) / 4 = 14 / 4 = 3.5
+        assertEquals(3.5, result, 0.01);
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
 }
