@@ -38,6 +38,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InvalidReviewDataException.class)
+    public ResponseEntity<Object> handleInvalidReviewData(InvalidReviewDataException ex, HttpServletRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(BookAlreadyExistsException.class)
     public ResponseEntity<Object> handleBookAlreadyExists(BookAlreadyExistsException ex, HttpServletRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
