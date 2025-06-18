@@ -167,4 +167,297 @@ class ReviewServiceImplTest {
         // Verify repository was called
         verify(bookRepository, times(1)).findById(bookId);
     }
+
+    // ========== EXCEPTION HANDLING TESTS ==========
+
+    @Test
+    void saveReview_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
+        // Arrange
+        Long bookId = 999L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(5);
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        assertThrows(BookNotFoundException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify repository was called but save was not
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void getReviewsByBookId_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
+        // Arrange
+        Long bookId = 999L;
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        assertThrows(BookNotFoundException.class, () -> reviewService.getReviewsByBookId(bookId));
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+
+    @Test
+    void saveReview_whenReviewIsNull_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, null));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenReviewerIsNull_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer(null);
+        review.setComment("Great book!");
+        review.setRating(5);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenReviewerIsEmpty_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("");
+        review.setComment("Great book!");
+        review.setRating(5);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenCommentIsNull_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment(null);
+        review.setRating(5);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenCommentIsEmpty_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("");
+        review.setRating(5);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenRatingIsZero_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(0);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenRatingIsSix_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(6);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenRatingIsNegative_shouldThrowInvalidReviewDataException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(-1);
+        
+        // Act & Assert
+        assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify no repository calls were made
+        verify(bookRepository, never()).findById(any());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    // ========== DATABASE EXCEPTION TESTS ==========
+
+    @Test
+    void saveReview_whenBookRepositoryThrowsException_shouldThrowDatabaseOperationException() {
+        // Arrange
+        Long bookId = 1L;
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(5);
+        
+        when(bookRepository.findById(bookId))
+            .thenThrow(new RuntimeException("Database connection failed"));
+        
+        // Act & Assert
+        assertThrows(DatabaseOperationException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(reviewRepository, never()).save(any());
+    }
+
+    @Test
+    void saveReview_whenReviewRepositoryThrowsException_shouldThrowDatabaseOperationException() {
+        // Arrange
+        Long bookId = 1L;
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        
+        Review review = new Review();
+        review.setReviewer("John Doe");
+        review.setComment("Great book!");
+        review.setRating(5);
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(reviewRepository.save(any(Review.class)))
+            .thenThrow(new RuntimeException("Save operation failed"));
+        
+        // Act & Assert
+        assertThrows(DatabaseOperationException.class, () -> reviewService.saveReview(bookId, review));
+        
+        // Verify both repositories were called
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(reviewRepository, times(1)).save(any());
+    }
+
+    @Test
+    void getReviewsByBookId_whenBookRepositoryThrowsException_shouldThrowDatabaseOperationException() {
+        // Arrange
+        Long bookId = 1L;
+        when(bookRepository.findById(bookId))
+            .thenThrow(new RuntimeException("Database connection failed"));
+        
+        // Act & Assert
+        assertThrows(DatabaseOperationException.class, () -> reviewService.getReviewsByBookId(bookId));
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findById(bookId);
+    }
+
+    // ========== BOUNDARY VALUE TESTS ==========
+
+    @Test
+    void saveReview_whenRatingIsOne_shouldSaveSuccessfully() {
+        // Arrange
+        Long bookId = 1L;
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        
+        Review inputReview = new Review();
+        inputReview.setReviewer("John Doe");
+        inputReview.setComment("Great book!");
+        inputReview.setRating(1); // Minimum rating
+        
+        Review savedReview = new Review();
+        savedReview.setId(1L);
+        savedReview.setReviewer("John Doe");
+        savedReview.setComment("Great book!");
+        savedReview.setRating(1);
+        savedReview.setBook(book);
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
+        
+        // Act
+        Review result = reviewService.saveReview(bookId, inputReview);
+        
+        // Assert
+        assertEquals(1, result.getRating());
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(reviewRepository, times(1)).save(inputReview);
+    }
+
+    @Test
+    void saveReview_whenRatingIsFive_shouldSaveSuccessfully() {
+        // Arrange
+        Long bookId = 1L;
+        Book book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        
+        Review inputReview = new Review();
+        inputReview.setReviewer("John Doe");
+        inputReview.setComment("Great book!");
+        inputReview.setRating(5); // Maximum rating
+        
+        Review savedReview = new Review();
+        savedReview.setId(1L);
+        savedReview.setReviewer("John Doe");
+        savedReview.setComment("Great book!");
+        savedReview.setRating(5);
+        savedReview.setBook(book);
+        
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
+        
+        // Act
+        Review result = reviewService.saveReview(bookId, inputReview);
+        
+        // Assert
+        assertEquals(5, result.getRating());
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(reviewRepository, times(1)).save(inputReview);
+    }
 } 
