@@ -34,6 +34,12 @@ public class ReviewServiceImpl implements ReviewService {
             // Set the book relationship
             review.setBook(book);
             
+            // Manage bidirectional relationship
+            if (book.getReviews() == null) {
+                book.setReviews(new java.util.ArrayList<>());
+            }
+            book.getReviews().add(review);
+            
             // Save the review
             return reviewRepository.save(review);
             
@@ -47,11 +53,13 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<Review> getReviewsByBookId(Long bookId) {
         try {
-            // Find the book and validate it exists
-            Book book = getBookByIdOrThrow(bookId);
+            // Find the book with reviews loaded and validate it exists
+            Book book = bookRepository.findByIdWithReviews(bookId)
+                    .orElseThrow(() -> new BookNotFoundException(bookId));
             
-            // Return the reviews from the book
-            return book.getReviews();
+            // Return the reviews from the book, ensuring we never return null
+            List<Review> reviews = book.getReviews();
+            return reviews != null ? reviews : new java.util.ArrayList<>();
             
         } catch (BookNotFoundException e) {
             throw e; // Re-throw business exception
@@ -85,7 +93,7 @@ public class ReviewServiceImpl implements ReviewService {
         // - Comment must not contain inappropriate content
         // - etc.
         
-        // For now, we'll keep basic null checks as a safety net
+        // For now, keep basic null checks as a safety net
         if (review.getReviewer() == null || review.getReviewer().trim().isEmpty()) {
             throw new InvalidReviewDataException("Reviewer name cannot be null or empty");
         }

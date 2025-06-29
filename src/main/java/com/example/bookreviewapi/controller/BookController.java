@@ -20,8 +20,17 @@ import com.example.bookreviewapi.model.Book;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @RestController
 @RequestMapping("/api/books")
+@Tag(name = "Book Management", description = "APIs for managing books")
 public class BookController {
 
     private final BookService bookService;
@@ -30,14 +39,28 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    // Implement the validation logic in the CreateBookDTO.java
     @PostMapping
-    public ResponseEntity<BookDTO> addBook(@RequestBody @Valid CreateBookDTO createBookDTO) {
-        Book savedBook = bookService.saveBook(BookMapper.toEntity(createBookDTO)); // --- No instance required (static method). Called the class name directly.
-        return ResponseEntity.ok(BookMapper.toDTO(savedBook)); // -- Returning the saved book as a DTO.
+    @Operation(summary = "Create a new book", description = "Creates a new book with the provided details")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Book created successfully",
+            content = @Content(schema = @Schema(implementation = BookDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid book data"),
+        @ApiResponse(responseCode = "409", description = "Book already exists"),
+        @ApiResponse(responseCode = "503", description = "Database operation failed")
+    })
+    public ResponseEntity<BookDTO> addBook(
+            @Parameter(description = "Book details", required = true)
+            @RequestBody @Valid CreateBookDTO createBookDTO) {
+        Book savedBook = bookService.saveBook(BookMapper.toEntity(createBookDTO));
+        return ResponseEntity.ok(BookMapper.toDTO(savedBook));
     }
 
     @GetMapping
+    @Operation(summary = "Get all books", description = "Retrieves a list of all books")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Books retrieved successfully",
+            content = @Content(schema = @Schema(implementation = BookDTO.class)))
+    })
     public ResponseEntity<List<BookDTO>> getAllBooks() {
         List<BookDTO> bookDTO = bookService.getAllBooks().stream()
             .map(BookMapper::toDTO)
@@ -46,21 +69,43 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookDTO> getBookById(@PathVariable Long id) {
+    @Operation(summary = "Get book by ID", description = "Retrieves a specific book by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Book found",
+            content = @Content(schema = @Schema(implementation = BookDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Book not found")
+    })
+    public ResponseEntity<BookDTO> getBookById(
+            @Parameter(description = "Book ID", required = true)
+            @PathVariable Long id) {
         Book book = bookService.getBookByIdOrThrow(id);
         BookDTO dto = BookMapper.toDTO(book);
         return ResponseEntity.ok(dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+    @Operation(summary = "Delete book", description = "Deletes a book by its ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Book deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Book not found")
+    })
+    public ResponseEntity<Void> deleteBook(
+            @Parameter(description = "Book ID", required = true)
+            @PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/average-rating")
-    public ResponseEntity<Double> getAverageRating(@PathVariable Long id) {
+    @Operation(summary = "Get average rating", description = "Calculates and returns the average rating for a book")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Average rating calculated successfully",
+            content = @Content(schema = @Schema(type = "number", format = "double"))),
+        @ApiResponse(responseCode = "404", description = "Book not found")
+    })
+    public ResponseEntity<Double> getAverageRating(
+            @Parameter(description = "Book ID", required = true)
+            @PathVariable Long id) {
         return ResponseEntity.ok(bookService.getAverageRating(id));
     }
-    
 }

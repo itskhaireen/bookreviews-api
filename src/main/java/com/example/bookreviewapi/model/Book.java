@@ -18,7 +18,7 @@ public class Book {
     private String author;
     private String genre;
 
-    @OneToMany (mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Review> reviews;
     
 }

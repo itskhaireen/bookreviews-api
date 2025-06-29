@@ -393,21 +393,15 @@ class BookServiceImplTest {
         // Create reviews
         Review review1 = new Review();
         review1.setId(1L);
-        review1.setRating(4);
-        review1.setReviewer("John");
-        review1.setComment("Great book!");
+        review1.setRating(5);
         
         Review review2 = new Review();
         review2.setId(2L);
-        review2.setRating(5);
-        review2.setReviewer("Jane");
-        review2.setComment("Excellent!");
+        review2.setRating(3);
         
         Review review3 = new Review();
         review3.setId(3L);
-        review3.setRating(3);
-        review3.setReviewer("Bob");
-        review3.setComment("Good book");
+        review3.setRating(4);
         
         // Create book with reviews
         Book book = new Book();
@@ -416,18 +410,17 @@ class BookServiceImplTest {
         book.setAuthor("Test Author");
         book.setReviews(List.of(review1, review2, review3));
         
-        // Mock the repository to return our book
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
         
         // Assert
-        // Expected: (4 + 5 + 3) / 3 = 12 / 3 = 4.0
+        // Expected: (5 + 3 + 4) / 3 = 12 / 3 = 4.0
         assertEquals(4.0, result, 0.01);
         
-        // Verify that getBookByIdOrThrow was called (indirectly through repository)
-        verify(bookRepository, times(1)).findById(bookId);
+        // Verify repository was called
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
     
     @Test
@@ -435,14 +428,14 @@ class BookServiceImplTest {
         // Arrange
         Long bookId = 1L;
         
-        // Create book with empty reviews list
+        // Create book with no reviews
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
-        book.setReviews(List.of()); // Empty list
+        book.setReviews(new ArrayList<>());
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -451,7 +444,7 @@ class BookServiceImplTest {
         assertEquals(0.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
     
     @Test
@@ -464,9 +457,9 @@ class BookServiceImplTest {
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
-        book.setReviews(null); // Null reviews
+        book.setReviews(null);
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -475,7 +468,7 @@ class BookServiceImplTest {
         assertEquals(0.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
     
     @Test
@@ -483,14 +476,13 @@ class BookServiceImplTest {
         // Arrange
         Long bookId = 999L;
         
-        // Mock repository to return empty (book not found)
-        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.empty());
         
         // Act & Assert
         assertThrows(BookNotFoundException.class, () -> bookService.getAverageRating(bookId));
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
     
     @Test
@@ -512,7 +504,7 @@ class BookServiceImplTest {
         book.setAuthor("Test Author");
         book.setReviews(List.of(review));
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -521,7 +513,7 @@ class BookServiceImplTest {
         assertEquals(5.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
     
     @Test
@@ -553,7 +545,7 @@ class BookServiceImplTest {
         book.setAuthor("Test Author");
         book.setReviews(List.of(review1, review2, review3, review4));
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -563,7 +555,7 @@ class BookServiceImplTest {
         assertEquals(3.5, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     @Test
@@ -584,7 +576,7 @@ class BookServiceImplTest {
         book.setTitle("Test Book");
         book.setReviews(List.of(review1, review2));
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -593,7 +585,7 @@ class BookServiceImplTest {
         assertEquals(0.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     @Test
@@ -618,7 +610,7 @@ class BookServiceImplTest {
         book.setTitle("Test Book");
         book.setReviews(List.of(review1, review2, review3));
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -627,7 +619,7 @@ class BookServiceImplTest {
         assertEquals(5.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     @Test
@@ -648,7 +640,7 @@ class BookServiceImplTest {
         book.setTitle("Test Book");
         book.setReviews(List.of(review1, review2));
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -657,7 +649,7 @@ class BookServiceImplTest {
         assertEquals(1.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     @Test
@@ -679,7 +671,7 @@ class BookServiceImplTest {
         book.setTitle("Test Book");
         book.setReviews(reviews);
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         double result = bookService.getAverageRating(bookId);
@@ -688,7 +680,7 @@ class BookServiceImplTest {
         assertEquals(3.0, result, 0.01);
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     @Test

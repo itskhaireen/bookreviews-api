@@ -76,19 +76,21 @@ public class BookServiceImpl implements BookService {
     @Override
     public double getAverageRating(Long bookId) {
         try {
-            Book bookRating = getBookByIdOrThrow(bookId);
-            List<Review> reviews = bookRating.getReviews();
+            Book book = bookRepository.findByIdWithReviews(bookId)
+                    .orElseThrow(() -> new BookNotFoundException(bookId));
+            
+            List<Review> reviews = book.getReviews();
 
             if (reviews == null || reviews.isEmpty()) {
                 return 0.0;
             }
 
             // Calculate the average rating
-            double averageRating = reviews.stream()
+            double totalRating = reviews.stream()
                     .mapToInt(Review::getRating)
                     .sum();
 
-            return averageRating / reviews.size();
+            return totalRating / reviews.size();
         } catch (BookNotFoundException e) {
             throw e; // Re-throw business exception
         } catch (Exception e) {

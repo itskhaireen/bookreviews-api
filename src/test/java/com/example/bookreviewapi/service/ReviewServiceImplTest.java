@@ -16,10 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
@@ -82,90 +84,103 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         
+        // Create reviews
+        Review review1 = new Review();
+        review1.setId(1L);
+        review1.setRating(5);
+        review1.setReviewer("John");
+        review1.setComment("Great book!");
+        
+        Review review2 = new Review();
+        review2.setId(2L);
+        review2.setRating(4);
+        review2.setReviewer("Jane");
+        review2.setComment("Good book");
+        
+        // Create book with reviews
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
+        book.setReviews(List.of(review1, review2));
         
-        Review review1 = new Review();
-        review1.setId(1L);
-        review1.setReviewer("John");
-        review1.setComment("Great book!");
-        review1.setRating(5);
-        review1.setBook(book);
-        
-        Review review2 = new Review();
-        review2.setId(2L);
-        review2.setReviewer("Jane");
-        review2.setComment("Excellent!");
-        review2.setRating(4);
-        review2.setBook(book);
-        
-        List<Review> reviews = List.of(review1, review2);
-        book.setReviews(reviews);
-        
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         List<Review> result = reviewService.getReviewsByBookId(bookId);
         
         // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("John", result.get(0).getReviewer());
-        assertEquals("Jane", result.get(1).getReviewer());
-        assertEquals(5, result.get(0).getRating());
-        assertEquals(4, result.get(1).getRating());
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getReviewer()).isEqualTo("John");
+        assertThat(result.get(1).getReviewer()).isEqualTo("Jane");
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
-
+    
     @Test
     void getReviewsByBookId_whenBookExistsButNoReviews_shouldReturnEmptyList() {
         // Arrange
         Long bookId = 1L;
         
+        // Create book with no reviews
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
-        book.setReviews(List.of()); // Empty reviews
+        book.setReviews(new ArrayList<>());
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         List<Review> result = reviewService.getReviewsByBookId(bookId);
         
         // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
-
+    
     @Test
-    void getReviewsByBookId_whenBookExistsButReviewsIsNull_shouldReturnNull() {
+    void getReviewsByBookId_whenBookExistsButReviewsIsNull_shouldReturnEmptyList() {
         // Arrange
         Long bookId = 1L;
         
+        // Create book with null reviews
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
-        book.setReviews(null); // Null reviews
+        book.setReviews(null);
         
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
         
         // Act
         List<Review> result = reviewService.getReviewsByBookId(bookId);
         
         // Assert
-        assertNull(result);
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
+    }
+    
+    @Test
+    void getReviewsByBookId_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
+        // Arrange
+        Long bookId = 999L;
+        
+        when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        assertThrows(BookNotFoundException.class, () -> reviewService.getReviewsByBookId(bookId));
+        
+        // Verify repository was called
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     // ========== EXCEPTION HANDLING TESTS ==========
@@ -187,19 +202,6 @@ class ReviewServiceImplTest {
         // Verify repository was called but save was not
         verify(bookRepository, times(1)).findById(bookId);
         verify(reviewRepository, never()).save(any());
-    }
-
-    @Test
-    void getReviewsByBookId_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
-        // Arrange
-        Long bookId = 999L;
-        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
-        
-        // Act & Assert
-        assertThrows(BookNotFoundException.class, () -> reviewService.getReviewsByBookId(bookId));
-        
-        // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
     }
 
     @Test
@@ -385,14 +387,14 @@ class ReviewServiceImplTest {
     void getReviewsByBookId_whenBookRepositoryThrowsException_shouldThrowDatabaseOperationException() {
         // Arrange
         Long bookId = 1L;
-        when(bookRepository.findById(bookId))
-            .thenThrow(new RuntimeException("Database connection failed"));
+        
+        when(bookRepository.findByIdWithReviews(bookId)).thenThrow(new RuntimeException("Database error"));
         
         // Act & Assert
         assertThrows(DatabaseOperationException.class, () -> reviewService.getReviewsByBookId(bookId));
         
         // Verify repository was called
-        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }
 
     // ========== BOUNDARY VALUE TESTS ==========
