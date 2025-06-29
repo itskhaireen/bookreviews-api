@@ -1,0 +1,178 @@
+{
+  "info": {
+    "_postman_id": "b1e2c3d4-5678-1234-9abc-def012345678",
+    "name": "Book Review API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for Book Review API with Books and Reviews endpoints, including error scenarios."
+  },
+  "item": [
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Create Book (Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"The Great Gatsby\",\n  \"author\": \"F. Scott Fitzgerald\",\n  \"genre\": \"Fiction\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Create Book (Validation Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"author\": \"\",\n  \"genre\": \"\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Get Book by ID (Success)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/books/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Book by ID (Not Found)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/books/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "999"]
+            }
+          }
+        },
+        {
+          "name": "Delete Book (Success)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/api/books/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Book Average Rating",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/books/1/average-rating",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1", "average-rating"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review (Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Amazing book!\",\n  \"rating\": 5,\n  \"reviewer\": \"Alice\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/books/1/reviews",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "Create Review (Validation Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"\",\n  \"rating\": 6,\n  \"reviewer\": \"\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/books/1/reviews",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "Get All Reviews for Book",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/books/1/reviews",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "books", "1", "reviews"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+} 
