@@ -1,7 +1,11 @@
-# Book Review API Documentation
+# ShelfSpeak API Documentation
+
+*---because books finally speak™*
 
 ## Overview
-A comprehensive REST API for managing books and their reviews. Built with Spring Boot 3.5.0, JPA, and H2 database.
+ShelfSpeak is a modern REST API for managing books and their reviews, designed for commercial-grade reliability, security, and extensibility. Built with Spring Boot, JPA, and JWT authentication, ShelfSpeak empowers users to share and discover book reviews with confidence.
+
+> **Note:** Sentiment analysis for reviews (using external APIs like HuggingFace or Google NLP) is under development and will soon provide automatic insights on review tone.
 
 ## Base URL
 ```
@@ -83,7 +87,6 @@ http://localhost:8080
 **Request Body:**
 ```json
 {
-    "reviewer": "John Doe",
     "comment": "Excellent book! Highly recommended.",
     "rating": 5
 }
@@ -93,9 +96,12 @@ http://localhost:8080
 ```json
 {
     "id": 1,
-    "reviewer": "John Doe",
+    "reviewerName": "John Doe",
+    "userId": 2,
     "comment": "Excellent book! Highly recommended.",
-    "rating": 5
+    "rating": 5,
+    "createdAt": "2025-07-06T12:00:00",
+    "updatedAt": "2025-07-06T12:00:00"
 }
 ```
 
@@ -107,15 +113,21 @@ http://localhost:8080
 [
     {
         "id": 1,
-        "reviewer": "John Doe",
+        "reviewerName": "John Doe",
+        "userId": 2,
         "comment": "Excellent book! Highly recommended.",
-        "rating": 5
+        "rating": 5,
+        "createdAt": "2025-07-06T12:00:00",
+        "updatedAt": "2025-07-06T12:00:00"
     },
     {
         "id": 2,
-        "reviewer": "Jane Smith",
+        "reviewerName": "Jane Smith",
+        "userId": 3,
         "comment": "Good read, but could be better.",
-        "rating": 4
+        "rating": 4,
+        "createdAt": "2025-07-06T12:05:00",
+        "updatedAt": "2025-07-06T12:05:00"
     }
 ]
 ```
@@ -179,7 +191,7 @@ http://localhost:8080
         "db": {
             "status": "UP",
             "details": {
-                "database": "H2",
+                "database": "MySQL",
                 "validationQuery": "isValid()"
             }
         },

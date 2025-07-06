@@ -94,8 +94,8 @@ public class ReviewServiceImpl implements ReviewService {
         // - etc.
         
         // For now, keep basic null checks as a safety net
-        if (review.getReviewer() == null || review.getReviewer().trim().isEmpty()) {
-            throw new InvalidReviewDataException("Reviewer name cannot be null or empty");
+        if (review.getUser() == null) {
+            throw new InvalidReviewDataException("Review must be associated with a user");
         }
         
         if (review.getComment() == null || review.getComment().trim().isEmpty()) {

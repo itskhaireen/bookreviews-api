@@ -6,6 +6,7 @@ import com.example.bookreviewapi.exception.BookAlreadyExistsException;
 import com.example.bookreviewapi.exception.DatabaseOperationException;
 import com.example.bookreviewapi.model.Book;
 import com.example.bookreviewapi.model.Review;
+import com.example.bookreviewapi.model.User;
 import com.example.bookreviewapi.repository.BookRepository;
 import com.example.bookreviewapi.repository.ReviewRepository;
 
@@ -493,8 +494,9 @@ class BookServiceImplTest {
         // Create single review
         Review review = new Review();
         review.setId(1L);
-        review.setRating(5);
-        review.setReviewer("Single Reviewer");
+        User reviewer = new User();
+        reviewer.setUsername("Single Reviewer");
+        review.setUser(reviewer);
         review.setComment("Amazing book!");
         
         // Create book with single review

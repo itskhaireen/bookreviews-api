@@ -14,7 +14,7 @@ public class ReviewMapper {
         Review review = new Review();
         review.setRating(dto.getRating());
         review.setComment(dto.getComment());
-        review.setReviewer(dto.getReviewer());
+        // Note: user will be set by the service layer after authentication
 
         return review;
     }
@@ -22,10 +22,26 @@ public class ReviewMapper {
     // Mapped Review --> ReviewDTO (Output - GET API)
     public static ReviewDTO toDTO(Review review) {
         ReviewDTO dto = new ReviewDTO();
-        dto.setId(review.getId()); // Users need to see the bookId for reviews of a specific book
+        dto.setId(review.getId());
         dto.setRating(review.getRating());
         dto.setComment(review.getComment());
-        dto.setReviewer(review.getReviewer());
+        
+        // Get reviewer information from the user relationship
+        if (review.getUser() != null) {
+            dto.setReviewerName(review.getUser().getUsername());
+            dto.setUserId(review.getUser().getId());
+        } else {
+            dto.setReviewerName("Unknown");
+            dto.setUserId(null);
+        }
+        
+        // Format dates
+        if (review.getCreatedAt() != null) {
+            dto.setCreatedAt(review.getCreatedAt().toString());
+        }
+        if (review.getUpdatedAt() != null) {
+            dto.setUpdatedAt(review.getUpdatedAt().toString());
+        }
 
         return dto;
     }

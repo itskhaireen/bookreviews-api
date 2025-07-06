@@ -21,9 +21,6 @@ public class CreateReviewDTO {
     @Max(value = 5, message = "Rating must be no more than 5")
     private int rating;
 
-    @Schema(description = "Name of the reviewer", example = "John Doe", required = true)
-    @NotBlank(message = "Reviewer is required")
-    @Size(max = 100, message = "Reviewer name cannot exceed 100 characters")
-    private String reviewer;
+
     
 }

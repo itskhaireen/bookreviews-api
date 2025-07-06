@@ -5,6 +5,7 @@ import com.example.bookreviewapi.exception.InvalidReviewDataException;
 import com.example.bookreviewapi.exception.DatabaseOperationException;
 import com.example.bookreviewapi.model.Book;
 import com.example.bookreviewapi.model.Review;
+import com.example.bookreviewapi.model.User;
 import com.example.bookreviewapi.repository.BookRepository;
 import com.example.bookreviewapi.repository.ReviewRepository;
 
@@ -45,14 +46,18 @@ class ReviewServiceImplTest {
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
         
+        User user = new User();
+        user.setId(10L);
+        user.setUsername("John Doe");
+        
         Review inputReview = new Review();
-        inputReview.setReviewer("John Doe");
+        inputReview.setUser(user);
         inputReview.setComment("Great book!");
         inputReview.setRating(5);
         
         Review savedReview = new Review();
         savedReview.setId(1L);
-        savedReview.setReviewer("John Doe");
+        savedReview.setUser(user);
         savedReview.setComment("Great book!");
         savedReview.setRating(5);
         savedReview.setBook(book);
@@ -66,7 +71,7 @@ class ReviewServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals("John Doe", result.getReviewer());
+        assertEquals("John Doe", result.getUser().getUsername());
         assertEquals("Great book!", result.getComment());
         assertEquals(5, result.getRating());
         assertEquals(book, result.getBook());
@@ -84,17 +89,24 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         
+        // Create users
+        User user1 = new User();
+        user1.setId(10L);
+        user1.setUsername("John");
+        User user2 = new User();
+        user2.setId(11L);
+        user2.setUsername("Jane");
         // Create reviews
         Review review1 = new Review();
         review1.setId(1L);
         review1.setRating(5);
-        review1.setReviewer("John");
+        review1.setUser(user1);
         review1.setComment("Great book!");
         
         Review review2 = new Review();
         review2.setId(2L);
         review2.setRating(4);
-        review2.setReviewer("Jane");
+        review2.setUser(user2);
         review2.setComment("Good book");
         
         // Create book with reviews
@@ -112,8 +124,8 @@ class ReviewServiceImplTest {
         // Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getReviewer()).isEqualTo("John");
-        assertThat(result.get(1).getReviewer()).isEqualTo("Jane");
+        assertThat(result.get(0).getUser().getUsername()).isEqualTo("John");
+        assertThat(result.get(1).getUser().getUsername()).isEqualTo("Jane");
         
         // Verify repository was called
         verify(bookRepository, times(1)).findByIdWithReviews(bookId);
@@ -190,7 +202,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 999L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -222,7 +234,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer(null);
+        review.setUser(null);
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -239,7 +251,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -256,7 +268,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment(null);
         review.setRating(5);
         
@@ -273,7 +285,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("");
         review.setRating(5);
         
@@ -290,7 +302,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(0);
         
@@ -307,7 +319,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(6);
         
@@ -324,7 +336,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(-1);
         
@@ -343,7 +355,7 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -367,7 +379,7 @@ class ReviewServiceImplTest {
         book.setTitle("Test Book");
         
         Review review = new Review();
-        review.setReviewer("John Doe");
+        review.setUser(new User());
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -408,13 +420,13 @@ class ReviewServiceImplTest {
         book.setTitle("Test Book");
         
         Review inputReview = new Review();
-        inputReview.setReviewer("John Doe");
+        inputReview.setUser(new User());
         inputReview.setComment("Great book!");
         inputReview.setRating(1); // Minimum rating
         
         Review savedReview = new Review();
         savedReview.setId(1L);
-        savedReview.setReviewer("John Doe");
+        savedReview.setUser(new User());
         savedReview.setComment("Great book!");
         savedReview.setRating(1);
         savedReview.setBook(book);
@@ -440,13 +452,13 @@ class ReviewServiceImplTest {
         book.setTitle("Test Book");
         
         Review inputReview = new Review();
-        inputReview.setReviewer("John Doe");
+        inputReview.setUser(new User());
         inputReview.setComment("Great book!");
         inputReview.setRating(5); // Maximum rating
         
         Review savedReview = new Review();
         savedReview.setId(1L);
-        savedReview.setReviewer("John Doe");
+        savedReview.setUser(new User());
         savedReview.setComment("Great book!");
         savedReview.setRating(5);
         savedReview.setBook(book);
