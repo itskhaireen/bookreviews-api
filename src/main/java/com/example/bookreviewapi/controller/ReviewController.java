@@ -4,11 +4,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.http.ResponseEntity;
 import com.example.bookreviewapi.service.ReviewService;
+import com.example.bookreviewapi.service.UserService;
+import com.example.bookreviewapi.model.User;
 
 import jakarta.validation.Valid;
 
@@ -27,17 +31,25 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+
 @RestController
 @RequestMapping("/api/books/{bookId}/reviews")
 @Tag(name = "Review Management", description = "APIs for managing book reviews")
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final UserService userService;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, UserService userService) {
         this.reviewService = reviewService;
+        this.userService = userService;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     @Operation(
         summary = "Add a review to a book",
@@ -54,8 +66,56 @@ public class ReviewController {
         @PathVariable Long bookId,
         @Parameter(description = "Review details to create", required = true)
         @RequestBody @Valid CreateReviewDTO createReviewDTO) {
-        Review savedReview = reviewService.saveReview(bookId, ReviewMapper.toEntity(createReviewDTO));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        Review review = ReviewMapper.toEntity(createReviewDTO);
+        review.setUser(user);
+        Review savedReview = reviewService.saveReview(bookId, review);
         return ResponseEntity.ok(ReviewMapper.toDTO(savedReview));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewDTO> updateReview(
+        @PathVariable Long bookId,
+        @PathVariable Long reviewId,
+        @RequestBody @Valid CreateReviewDTO createReviewDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        Review existingReview = reviewService.getReviewById(reviewId);
+        boolean isOwner = existingReview.getUser().getId().equals(user.getId());
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMIN"));
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(403).build();
+        }
+        existingReview.setComment(createReviewDTO.getComment());
+        existingReview.setRating(createReviewDTO.getRating());
+        Review updatedReview = reviewService.saveReview(bookId, existingReview);
+        return ResponseEntity.ok(ReviewMapper.toDTO(updatedReview));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<Void> deleteReview(
+        @PathVariable Long bookId,
+        @PathVariable Long reviewId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        Review existingReview = reviewService.getReviewById(reviewId);
+        boolean isOwner = existingReview.getUser().getId().equals(user.getId());
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> role.equals("ROLE_ADMIN"));
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(403).build();
+        }
+        reviewService.deleteReview(reviewId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

@@ -1,6 +1,7 @@
 package com.example.bookreviewapi.service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 import com.example.bookreviewapi.repository.BookRepository;
@@ -40,6 +41,12 @@ public class ReviewServiceImpl implements ReviewService {
             }
             book.getReviews().add(review);
             
+            // Set timestamps
+            if (review.getCreatedAt() == null) {
+                review.setCreatedAt(LocalDateTime.now());
+            }
+            review.setUpdatedAt(LocalDateTime.now());
+            
             // Save the review
             return reviewRepository.save(review);
             
@@ -68,6 +75,17 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
+    @Override
+    public Review getReviewById(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new com.example.bookreviewapi.exception.InvalidReviewDataException("Review not found with id: " + reviewId));
+    }
+
+    @Override
+    public void deleteReview(Long reviewId) {
+        reviewRepository.deleteById(reviewId);
+    }
+
     /**
      * Helper method to get book by ID with proper exception handling
      */
@@ -87,15 +105,15 @@ public class ReviewServiceImpl implements ReviewService {
         }
         
         // Business logic validations (beyond basic format validation)
-        // These could include complex rules like:
-        // - Reviewer cannot review the same book twice
-        // - Rating must be within acceptable range for the book genre
-        // - Comment must not contain inappropriate content
-        // - etc.
         
         // For now, keep basic null checks as a safety net
         if (review.getUser() == null) {
             throw new InvalidReviewDataException("Review must be associated with a user");
+        }
+        
+        // New: Check for empty username
+        if (review.getUser().getUsername() == null || review.getUser().getUsername().trim().isEmpty()) {
+            throw new InvalidReviewDataException("Reviewer username cannot be null or empty");
         }
         
         if (review.getComment() == null || review.getComment().trim().isEmpty()) {

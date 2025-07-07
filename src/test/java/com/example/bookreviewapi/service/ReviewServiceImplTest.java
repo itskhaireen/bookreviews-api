@@ -200,18 +200,17 @@ class ReviewServiceImplTest {
     @Test
     void saveReview_whenBookDoesNotExist_shouldThrowBookNotFoundException() {
         // Arrange
-        Long bookId = 999L;
+        Long bookId = 1L;
+        User user = new User();
+        user.setUsername("testuser");
         Review review = new Review();
-        review.setUser(new User());
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(5);
-        
         when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
-        
         // Act & Assert
         assertThrows(BookNotFoundException.class, () -> reviewService.saveReview(bookId, review));
-        
-        // Verify repository was called but save was not
+        // Verify repository was called
         verify(bookRepository, times(1)).findById(bookId);
         verify(reviewRepository, never()).save(any());
     }
@@ -251,13 +250,11 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        review.setUser(new User()); // User with no username
         review.setComment("Great book!");
         review.setRating(5);
-        
         // Act & Assert
         assertThrows(InvalidReviewDataException.class, () -> reviewService.saveReview(bookId, review));
-        
         // Verify no repository calls were made
         verify(bookRepository, never()).findById(any());
         verify(reviewRepository, never()).save(any());
@@ -268,7 +265,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment(null);
         review.setRating(5);
         
@@ -285,7 +284,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment("");
         review.setRating(5);
         
@@ -302,7 +303,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(0);
         
@@ -319,7 +322,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(6);
         
@@ -336,7 +341,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(-1);
         
@@ -355,7 +362,9 @@ class ReviewServiceImplTest {
         // Arrange
         Long bookId = 1L;
         Review review = new Review();
-        review.setUser(new User());
+        User user = new User();
+        user.setUsername("testuser");
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -377,9 +386,10 @@ class ReviewServiceImplTest {
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
-        
+        User user = new User();
+        user.setUsername("testuser");
         Review review = new Review();
-        review.setUser(new User());
+        review.setUser(user);
         review.setComment("Great book!");
         review.setRating(5);
         
@@ -418,29 +428,34 @@ class ReviewServiceImplTest {
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
-        
+        User user = new User();
+        user.setUsername("testuser");
         Review inputReview = new Review();
-        inputReview.setUser(new User());
+        inputReview.setUser(user);
         inputReview.setComment("Great book!");
         inputReview.setRating(1); // Minimum rating
-        
         Review savedReview = new Review();
         savedReview.setId(1L);
-        savedReview.setUser(new User());
+        savedReview.setUser(user);
         savedReview.setComment("Great book!");
         savedReview.setRating(1);
         savedReview.setBook(book);
-        
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
         when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
-        
         // Act
         Review result = reviewService.saveReview(bookId, inputReview);
-        
         // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("testuser", result.getUser().getUsername());
+        assertEquals("Great book!", result.getComment());
         assertEquals(1, result.getRating());
+        assertEquals(book, result.getBook());
+        // Verify the book relationship was set
         verify(bookRepository, times(1)).findById(bookId);
         verify(reviewRepository, times(1)).save(inputReview);
+        // Verify the book was set on the review before saving
+        assertEquals(book, inputReview.getBook());
     }
 
     @Test
@@ -450,28 +465,33 @@ class ReviewServiceImplTest {
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
-        
+        User user = new User();
+        user.setUsername("testuser");
         Review inputReview = new Review();
-        inputReview.setUser(new User());
+        inputReview.setUser(user);
         inputReview.setComment("Great book!");
         inputReview.setRating(5); // Maximum rating
-        
         Review savedReview = new Review();
         savedReview.setId(1L);
-        savedReview.setUser(new User());
+        savedReview.setUser(user);
         savedReview.setComment("Great book!");
         savedReview.setRating(5);
         savedReview.setBook(book);
-        
         when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
         when(reviewRepository.save(any(Review.class))).thenReturn(savedReview);
-        
         // Act
         Review result = reviewService.saveReview(bookId, inputReview);
-        
         // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("testuser", result.getUser().getUsername());
+        assertEquals("Great book!", result.getComment());
         assertEquals(5, result.getRating());
+        assertEquals(book, result.getBook());
+        // Verify the book relationship was set
         verify(bookRepository, times(1)).findById(bookId);
         verify(reviewRepository, times(1)).save(inputReview);
+        // Verify the book was set on the review before saving
+        assertEquals(book, inputReview.getBook());
     }
 } 

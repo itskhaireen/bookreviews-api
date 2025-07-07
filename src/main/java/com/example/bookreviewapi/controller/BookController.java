@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.http.ResponseEntity;
 import com.example.bookreviewapi.service.BookService;
+import com.example.bookreviewapi.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -17,6 +18,7 @@ import com.example.bookreviewapi.mapper.BookMapper;
 import com.example.bookreviewapi.dto.BookDTO;
 import com.example.bookreviewapi.dto.CreateBookDTO;
 import com.example.bookreviewapi.model.Book;
+import com.example.bookreviewapi.model.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,15 +30,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/books")
 @Tag(name = "Book Management", description = "APIs for managing books")
 public class BookController {
 
     private final BookService bookService;
+    private final UserService userService;
 
-    public BookController(BookService bookService) {
+    public BookController(BookService bookService, UserService userService) {
         this.bookService = bookService;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -53,7 +61,13 @@ public class BookController {
     public ResponseEntity<BookDTO> addBook(
         @Parameter(description = "Book details to create", required = true)
         @RequestBody @Valid CreateBookDTO createBookDTO) {
-        Book savedBook = bookService.saveBook(BookMapper.toEntity(createBookDTO));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userService.findByUsername(username);
+        Book book = BookMapper.toEntity(createBookDTO);
+        // Optionally, if you want to track who added the book:
+        // book.setAddedBy(user);
+        Book savedBook = bookService.saveBook(book);
         return ResponseEntity.ok(BookMapper.toDTO(savedBook));
     }
 
@@ -91,6 +105,7 @@ public class BookController {
         return ResponseEntity.ok(dto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Delete a book",
@@ -103,6 +118,10 @@ public class BookController {
     public ResponseEntity<Void> deleteBook(
         @Parameter(description = "ID of the book to delete", required = true)
         @PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        // User user = userService.findByUsername(username);
+        // TODO: Add role/ownership check here if needed in the future
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }

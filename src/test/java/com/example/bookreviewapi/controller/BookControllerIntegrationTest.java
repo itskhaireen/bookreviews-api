@@ -9,6 +9,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.bookreviewapi.model.User;
+import com.example.bookreviewapi.model.UserRole;
+import com.example.bookreviewapi.repository.UserRepository;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // This class is used for integration testing of the BookController
 
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BookControllerIntegrationTest {
     
     @Autowired
@@ -29,15 +34,43 @@ class BookControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Test
     void contextLoads_andMockMvcIsInjected() {
         // This test just verifies that the Spring context loads and MockMvc is available
         assertThat(mockMvc).isNotNull();
     }
 
+    // Helper: Register a user and return JWT token
+    private String registerAndLoginUser(String username, String email, String password) throws Exception {
+        String userJson = String.format("{\"username\":\"%s\",\"email\":\"%s\",\"password\":\"%s\"}", username, email, password);
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(userJson))
+                .andExpect(status().isOk());
+        String loginJson = String.format("{\"usernameOrEmail\":\"%s\",\"password\":\"%s\"}", username, password);
+        MvcResult loginResult = mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isOk())
+                .andReturn();
+        return "Bearer " + objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("token").asText();
+    }
+
+    // Helper: Register a user, set role to ADMIN, and return JWT token
+    private String registerAndLoginAdmin(String username, String email, String password) throws Exception {
+        String token = registerAndLoginUser(username, email, password);
+        User user = userRepository.findByUsername(username).orElseThrow();
+        user.setRole(UserRole.ADMIN);
+        userRepository.save(user);
+        return token;
+    }
+
     @Test
     void createBook_shouldReturnSavedBook() throws Exception {
-        // Arrange: Prepare a JSON request body
+        String token = registerAndLoginUser("user1", "user1@example.com", "password123");
         String bookJson = """
         {
           \"title\": \"Integration Test Book\",
@@ -45,9 +78,8 @@ class BookControllerIntegrationTest {
           \"genre\": \"Test Genre\"
         }
         """;
-
-        // Act & Assert: Perform POST request and check response
         mockMvc.perform(post("/api/books")
+                .header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(bookJson))
                 .andExpect(status().isOk())
@@ -55,12 +87,27 @@ class BookControllerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Integration Test Book"))
                 .andExpect(jsonPath("$.author").value("Test Author"))
                 .andExpect(jsonPath("$.genre").value("Test Genre"))
-                .andExpect(jsonPath("$.id").isNumber()); // ID should be generated
+                .andExpect(jsonPath("$.id").isNumber());
+    }
+
+    @Test
+    void createBook_unauthenticated_shouldReturn401() throws Exception {
+        String bookJson = """
+        {
+          \"title\": \"Integration Test Book\",
+          \"author\": \"Test Author\",
+          \"genre\": \"Test Genre\"
+        }
+        """;
+        mockMvc.perform(post("/api/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(bookJson))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void getBooks_shouldReturnListOfBooks() throws Exception {
-        // Arrange : Create some books so the list is not empty
+        String token = registerAndLoginUser("user2", "user2@example.com", "password123");
         String bookJson1 = """
         {
             \"title\": \"Book 1\",
@@ -68,7 +115,6 @@ class BookControllerIntegrationTest {
             \"genre\": \"Genre 1\"
         }
         """;
-
         String bookJson2 = """
         {
             \"title\": \"Book 2\",
@@ -76,18 +122,16 @@ class BookControllerIntegrationTest {
             \"genre\": \"Genre 2\"
         }
         """;
-
         mockMvc.perform(post("/api/books")
+            .header("Authorization", token)
             .contentType(MediaType.APPLICATION_JSON)
             .content(bookJson1))
             .andExpect(status().isOk());
-
-            mockMvc.perform(post("/api/books")
+        mockMvc.perform(post("/api/books")
+            .header("Authorization", token)
             .contentType(MediaType.APPLICATION_JSON)
             .content(bookJson2))
             .andExpect(status().isOk());
-
-        // Act & Assert: Perform GET request and check response
         mockMvc.perform(get("/api/books"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -103,7 +147,7 @@ class BookControllerIntegrationTest {
 
     @Test
     void getBookById_shouldReturnCorrectBook () throws Exception {
-        // Arrange : Create some books so the list is not empty
+        String token = registerAndLoginUser("user3", "user3@example.com", "password123");
         String bookJson = """
             {
               "title": "Book for ID Test",
@@ -111,19 +155,14 @@ class BookControllerIntegrationTest {
               "genre": "Genre X"
             }
             """;
-
-        // POST the book and capture the response - Extract the return ID
         MvcResult result = mockMvc.perform(post("/api/books")
+                                .header("Authorization", token)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(bookJson))
                                 .andExpect(status().isOk())
                                 .andReturn();
-        
-        // Extract the ID from the response JSON
         String responseBody = result.getResponse().getContentAsString();
         Long id = objectMapper.readTree(responseBody).get("id").asLong();
-
-        // Act & Assert: GET the book by ID and check the response
         mockMvc.perform(get("/api/books/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -135,17 +174,15 @@ class BookControllerIntegrationTest {
 
     @Test
     void getBookById_whenBookDoesNotExist_shouldReturn404 () throws Exception {
-        // Arrange an ID that doesn't exist
-        Long nonExistentID = 0207L;
-
+        Long nonExistentID = 207L;
         mockMvc.perform(get("/api/books/{id}", nonExistentID))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Book not found with ID: " + nonExistentID));
     }
 
     @Test
-    void deleteBookById_shouldDeleteBook() throws Exception {
-        // Arrange: Create a book and extract its ID
+    void deleteBookById_asAdmin_shouldDeleteBook() throws Exception {
+        String adminToken = registerAndLoginAdmin("admin1", "admin1@example.com", "password123");
         String bookJson = """
             {
               "title": "Book for ID Test",
@@ -153,31 +190,71 @@ class BookControllerIntegrationTest {
               "genre": "Genre X"
             }
             """;
-
         MvcResult result = mockMvc.perform(post("/api/books")
+                                .header("Authorization", adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(bookJson))
                                 .andExpect(status().isOk())
                                 .andReturn();
-
         String responseBody = result.getResponse().getContentAsString();
         Long id = objectMapper.readTree(responseBody).get("id").asLong();
-        
-       // Act & Assert: DELETE the book by ID and check the response
-        mockMvc.perform(delete("/api/books/{id}", id))
+        mockMvc.perform(delete("/api/books/{id}", id)
+                .header("Authorization", adminToken))
                 .andExpect(status().isNoContent());
-
-        // Verify the book is actually deleted by trying to GET it
         mockMvc.perform(get("/api/books/{id}", id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Book not found with ID: " + id));
+    }
 
+    @Test
+    void deleteBookById_asUser_shouldReturn403() throws Exception {
+        String userToken = registerAndLoginUser("user4", "user4@example.com", "password123");
+        String adminToken = registerAndLoginAdmin("admin2", "admin2@example.com", "password123");
+        String bookJson = """
+            {
+              "title": "Book for Forbidden Test",
+              "author": "Author Y",
+              "genre": "Genre Y"
+            }
+            """;
+        MvcResult result = mockMvc.perform(post("/api/books")
+                                .header("Authorization", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(bookJson))
+                                .andExpect(status().isOk())
+                                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        Long id = objectMapper.readTree(responseBody).get("id").asLong();
+        mockMvc.perform(delete("/api/books/{id}", id)
+                .header("Authorization", userToken))
+                .andExpect(status().isForbidden());
+    }
 
-        }
+    @Test
+    void deleteBookById_unauthenticated_shouldReturn401() throws Exception {
+        String adminToken = registerAndLoginAdmin("admin3", "admin3@example.com", "password123");
+        String bookJson = """
+            {
+              "title": "Book for Unauthorized Test",
+              "author": "Author Z",
+              "genre": "Genre Z"
+            }
+            """;
+        MvcResult result = mockMvc.perform(post("/api/books")
+                                .header("Authorization", adminToken)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(bookJson))
+                                .andExpect(status().isOk())
+                                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        Long id = objectMapper.readTree(responseBody).get("id").asLong();
+        mockMvc.perform(delete("/api/books/{id}", id))
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void getAverageRating_shouldReturnCorrectAverage () throws Exception {
-        // Step 1: Create a book and extract its ID
+        String token = registerAndLoginUser("user5", "user5@example.com", "password123");
         String bookJson = """
             {
                 "title": "Book for Rating Test",
@@ -185,20 +262,17 @@ class BookControllerIntegrationTest {
                 "genre": "Rating Genre"
             }
             """;
-
         MvcResult result = mockMvc.perform(post("/api/books")
+                    .header("Authorization", token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(bookJson))
                     .andExpect(status().isOk())
                     .andReturn();
-
         String responseBody = result.getResponse().getContentAsString();
         Long bookId = objectMapper.readTree(responseBody).get("id").asLong();
-
         // Step 2: Add reviews to the book
         String review1Json = """
             {
-                "reviewer": "Putri",
                 "comment": "Great book!",
                 "rating": 5
             }
@@ -206,7 +280,6 @@ class BookControllerIntegrationTest {
 
         String review2Json = """
             {
-                "reviewer": "Khaireen",
                 "comment": "Kind of a OK book",
                 "rating": 3
             }
@@ -214,12 +287,14 @@ class BookControllerIntegrationTest {
 
         // Add first review
         mockMvc.perform(post("/api/books/{bookId}/reviews", bookId)
+                .header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(review1Json))
                 .andExpect(status().isOk());
 
         // Add second review  
         mockMvc.perform(post("/api/books/{bookId}/reviews", bookId)
+                .header("Authorization", token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(review2Json))
                 .andExpect(status().isOk());
@@ -229,6 +304,5 @@ class BookControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").value(4.0)); // Expected: (5 + 3) / 2 = 4.0
-
     }
 }

@@ -12,6 +12,26 @@ ShelfSpeak is a modern REST API for managing books and their reviews, designed f
 http://localhost:8080
 ```
 
+## Endpoint Security Summary
+| Endpoint | Method | Public | Authenticated | Admin Only |
+|----------|--------|--------|---------------|------------|
+| /auth/** | any    | ✔      |               |            |
+| /api/books | GET | ✔      |               |            |
+| /api/books/{id} | GET | ✔  |               |            |
+| /api/books/{id}/average-rating | GET | ✔ |           |            |
+| /api/books | POST |        | ✔ (JWT)       |            |
+| /api/books/{id} | DELETE |        |               | ✔ (JWT)   |
+| /api/books/{bookId}/reviews | GET | ✔ |           |            |
+| /api/books/{bookId}/reviews | POST |        | ✔ (JWT)       |            |
+| /api/books/{bookId}/reviews/{reviewId} | PUT/DELETE |        | ✔ (JWT, owner or admin) |            |
+
+> **Note:** For protected endpoints, include `Authorization: Bearer <token>` in the request header.
+
+## Integration Test Status
+- `AuthControllerIntegrationTest`: **complete & passing**
+- `BookControllerIntegrationTest`: **complete & passing**
+- `ReviewControllerIntegrationTest`: under development
+
 ## Available Endpoints
 
 ### Book Management
@@ -177,6 +197,7 @@ http://localhost:8080
     "path": "/api/books"
 }
 ```
+> **Note:** 503 errors are rare and usually indicate a database or internal server error. Check logs for details.
 
 ## Monitoring Endpoints
 
@@ -247,71 +268,11 @@ curl http://localhost:8080/api/books
 ```bash
 curl -X POST http://localhost:8080/api/books/1/reviews \
   -H "Content-Type: application/json" \
-  -d '{"reviewer":"John Doe","comment":"Great book!","rating":5}'
-```
-
-4. **Get average rating:**
-```bash
-curl http://localhost:8080/api/books/1/average-rating
+  -H "Authorization: Bearer <token>" \
+  -d '{"comment":"Great book!","rating":5}'
 ```
 
 ## Validation Rules
 
 ### Book Validation
-- `title`: Required, not empty
-- `author`: Required, not empty
-- `genre`: Required, not empty
-
-### Review Validation
-- `reviewer`: Required, not empty
-- `comment`: Required, not empty
-- `rating`: Required, between 1 and 5 (inclusive)
-
-## Business Rules
-
-1. **Book Uniqueness**: Books must have unique title-author combinations
-2. **Review Association**: Reviews must be associated with existing books
-3. **Average Rating**: Calculated as the mean of all ratings for a book
-4. **Empty Reviews**: Books with no reviews return average rating of 0.0
-
-## Technology Stack
-
-- **Framework**: Spring Boot 3.5.0
-- **Database**: H2 (in-memory)
-- **ORM**: Spring Data JPA
-- **Validation**: Bean Validation (Jakarta)
-- **Testing**: JUnit 5, Mockito, Spring Boot Test
-- **Documentation**: Spring Boot Actuator
-- **Build Tool**: Maven
-
-## Running the Application
-
-1. **Start the application:**
-```bash
-./mvnw spring-boot:run
-```
-
-2. **Run tests:**
-```bash
-./mvnw test
-```
-
-3. **Access the API:**
-   - Base URL: `http://localhost:8080`
-   - Health Check: `http://localhost:8080/actuator/health`
-   - H2 Console: `http://localhost:8080/h2-console`
-
-## Integration Tests
-
-The application includes comprehensive integration tests covering:
-- ✅ All CRUD operations for books
-- ✅ Review management
-- ✅ Error scenarios (404, 400, 409, 503)
-- ✅ Complex workflows (multiple reviews + average rating)
-- ✅ Validation error handling
-- ✅ Database transaction management
-
-**Total Tests:** 66 (Unit + Integration)
-- Unit Tests: 50
-- Integration Tests: 15
-- Application Tests: 1 
+- `

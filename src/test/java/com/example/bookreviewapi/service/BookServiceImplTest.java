@@ -490,30 +490,20 @@ class BookServiceImplTest {
     void getAverageRating_whenBookHasSingleReview_shouldReturnThatRating() {
         // Arrange
         Long bookId = 1L;
-        
-        // Create single review
         Review review = new Review();
         review.setId(1L);
-        User reviewer = new User();
-        reviewer.setUsername("Single Reviewer");
-        review.setUser(reviewer);
-        review.setComment("Amazing book!");
-        
-        // Create book with single review
+        review.setRating(5);
         Book book = new Book();
         book.setId(bookId);
         book.setTitle("Test Book");
         book.setAuthor("Test Author");
+        review.setBook(book); // Ensure review is associated with the book
         book.setReviews(List.of(review));
-        
         when(bookRepository.findByIdWithReviews(bookId)).thenReturn(Optional.of(book));
-        
         // Act
         double result = bookService.getAverageRating(bookId);
-        
         // Assert
         assertEquals(5.0, result, 0.01);
-        
         // Verify repository was called
         verify(bookRepository, times(1)).findByIdWithReviews(bookId);
     }

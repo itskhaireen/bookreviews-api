@@ -8,4 +8,6 @@ public interface ReviewService {
     
     Review saveReview(Long BookId, Review review);
     List<Review> getReviewsByBookId(Long bookId);
+    Review getReviewById(Long reviewId);
+    void deleteReview(Long reviewId);
 }
