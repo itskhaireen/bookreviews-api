@@ -274,5 +274,16 @@ curl -X POST http://localhost:8080/api/books/1/reviews \
 
 ## Validation Rules
 
-### Book Validation
-- `
+| Field         | Entity  | Required | Constraints/Notes                       |
+|--------------|---------|----------|-----------------------------------------|
+| title        | Book    | Yes      | Not empty, max 255 chars                |
+| author       | Book    | Yes      | Not empty, max 255 chars                |
+| genre        | Book    | Yes      | Not empty                               |
+| comment      | Review  | Yes      | Not empty, max 1000 chars               |
+| rating       | Review  | Yes      | Integer, 1–5 inclusive                  |
+| user         | Review  | Yes      | Must be authenticated user, username not null/empty |
+| createdAt    | Review  | Auto     | Set automatically                       |
+| updatedAt    | Review  | Auto     | Set automatically                       |
+
+- All fields are validated via DTOs and service-layer checks.
+- Error responses include details for validation failures.
