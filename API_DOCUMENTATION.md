@@ -30,7 +30,7 @@ http://localhost:8080
 ## Integration Test Status
 - `AuthControllerIntegrationTest`: **complete & passing**
 - `BookControllerIntegrationTest`: **complete & passing**
-- `ReviewControllerIntegrationTest`: under development
+- `ReviewControllerIntegrationTest`: **complete & passing**
 
 ## Available Endpoints
 

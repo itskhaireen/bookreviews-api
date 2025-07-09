@@ -9,7 +9,7 @@ ShelfSpeak is a modern Spring Boot REST API for managing book reviews, emphasizi
 - **Integration tests:**
   - `AuthControllerIntegrationTest` (**complete & passing**)
   - `BookControllerIntegrationTest` (**complete & passing**)
-  - `ReviewControllerIntegrationTest` (under development)
+  - `ReviewControllerIntegrationTest` (**complete & passing**)
 
 ## Debugging & Test Output
 - All test output is available in `target/surefire-reports/` after running tests.
@@ -28,7 +28,27 @@ ShelfSpeak is a modern Spring Boot REST API for managing book reviews, emphasizi
 - **Sentiment analysis for reviews using external APIs (e.g., HuggingFace, Google NLP) is under development**
 
 ## Postman Collection
-- The Postman collection (`BookReviewAPI.postman_collection.json`) is **under development** and may not reflect all current endpoints or request/response formats.
+- The Postman collection (`BookReviewAPI.postman_collection.json`) is **up-to-date** with authentication and payload requirements for all endpoints.
+
+## Authentication Note
+- For all protected endpoints (book creation, review creation, etc.), you must include a valid JWT token in the `Authorization` header: `Bearer <token>`
 
 ## Recent Updates
 See [CHANGELOG.md](CHANGELOG.md) for recent fixes and updates.
+
+## Admin Account & Role Management
+
+- By default, **no admin user exists** in development or production. All users registered via the API are assigned the `USER` role.
+- **Admin-only features** (such as deleting books or changing user roles) require at least one user with the `ADMIN` role.
+- To test or use admin features, you must manually create an admin user in your database. For example, in MySQL:
+
+  ```sql
+  -- Generate a BCrypt hash for your chosen password (do not use plain text)
+  INSERT INTO users (username, email, password, role)
+  VALUES ('admin', 'admin@example.com', '<bcrypt_hash>', 'ADMIN');
+  ```
+- After creating the admin, log in via `/auth/login` to obtain a JWT token for admin actions.
+- **Security Note:** Always use a strong, unique password for the admin account and change it after first login.
+
+### Testing
+- Automated tests are unaffected: they programmatically create admin users as needed and fully cover admin scenarios.

@@ -14,7 +14,8 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer <token>" }
             ],
             "body": {
               "mode": "raw",
@@ -34,7 +35,8 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer <token>" }
             ],
             "body": {
               "mode": "raw",
@@ -92,6 +94,9 @@
           "name": "Delete Book (Success)",
           "request": {
             "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer <token>" }
+            ],
             "url": {
               "raw": "http://localhost:8080/api/books/1",
               "protocol": "http",
@@ -124,11 +129,12 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer <token>" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"comment\": \"Amazing book!\",\n  \"rating\": 5,\n  \"reviewer\": \"Alice\"\n}"
+              "raw": "{\n  \"comment\": \"Amazing book!\",\n  \"rating\": 5\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/books/1/reviews",
@@ -144,11 +150,12 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer <token>" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"comment\": \"\",\n  \"rating\": 6,\n  \"reviewer\": \"\"\n}"
+              "raw": "{\n  \"comment\": \"\",\n  \"rating\": 6\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/books/1/reviews",
