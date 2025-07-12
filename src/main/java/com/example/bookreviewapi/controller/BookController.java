@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 
@@ -109,7 +110,8 @@ public class BookController {
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Delete a book",
-        description = "Deletes a book and all its associated reviews from the system."
+        description = "Deletes a book and all its associated reviews from the system. **Admin access required.**",
+        security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Book deleted successfully"),

@@ -38,10 +38,13 @@ See [CHANGELOG.md](CHANGELOG.md) for recent fixes and updates.
 
 ## Admin Account & Role Management
 
-- By default, **no admin user exists** in development or production. All users registered via the API are assigned the `USER` role.
-- **Admin-only features** (such as deleting books or changing user roles) require at least one user with the `ADMIN` role.
-- To test or use admin features, you must manually create an admin user in your database. For example, in MySQL:
-
+- In the **development environment**, an admin user is automatically created at startup if none exists:
+  - Username: `admin`
+  - Password: `admin123`
+  - Email: `admin@bookreview.com`
+  - **Change these credentials immediately if using for anything beyond local development!**
+- In **production**, no admin user is created by default. You must manually create an admin user in your database. For example, in MySQL:
+  
   ```sql
   -- Generate a BCrypt hash for your chosen password (do not use plain text)
   INSERT INTO users (username, email, password, role)
@@ -49,6 +52,40 @@ See [CHANGELOG.md](CHANGELOG.md) for recent fixes and updates.
   ```
 - After creating the admin, log in via `/auth/login` to obtain a JWT token for admin actions.
 - **Security Note:** Always use a strong, unique password for the admin account and change it after first login.
+- **Role-based access is fully supported in the dev environment**—you can test both USER and ADMIN features out of the box.
+
+## JWT Secret Configuration
+
+- For learning/demo purposes, a sample `jwt.secret` is included in `application-prod.properties`:
+  ```properties
+  # WARNING: This is a demo secret for learning purposes only!
+  jwt.secret=DemoProdSecretKey1234567890
+  jwt.expirationMs=86400000
+  ```
+- **In real production, never commit secrets to source control.** Use environment variables or a secure secrets manager instead.
+
+### Production Deployment with Environment Variables
+
+For production deployments, use environment variables to set sensitive configuration:
+
+```bash
+# Set environment variables
+export JWT_SECRET=your_super_secure_production_secret_here
+export JWT_EXPIRATION_MS=86400000
+export SPRING_PROFILES_ACTIVE=prod
+export SPRING_DATASOURCE_URL=jdbc:mysql://your-db-host:3306/book_review_db
+export SPRING_DATASOURCE_USERNAME=your_db_username
+export SPRING_DATASOURCE_PASSWORD=your_db_password
+```
+
+Then update `application-prod.properties` to use environment variables:
+```properties
+jwt.secret=${JWT_SECRET}
+jwt.expirationMs=${JWT_EXPIRATION_MS:86400000}
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+```
 
 ### Testing
 - Automated tests are unaffected: they programmatically create admin users as needed and fully cover admin scenarios.

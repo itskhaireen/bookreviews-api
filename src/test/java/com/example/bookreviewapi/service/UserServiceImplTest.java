@@ -1,15 +1,14 @@
 package com.example.bookreviewapi.service;
 
-import com.example.bookreviewapi.exception.UserAlreadyExistsException;
-import com.example.bookreviewapi.exception.UserNotFoundException;
 import com.example.bookreviewapi.model.User;
 import com.example.bookreviewapi.model.UserRole;
 import com.example.bookreviewapi.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
@@ -18,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
     @Mock
@@ -28,11 +28,6 @@ class UserServiceImplTest {
 
     @InjectMocks
     private UserServiceImpl userService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     void registerUser_shouldSaveUserWithEncodedPassword() {

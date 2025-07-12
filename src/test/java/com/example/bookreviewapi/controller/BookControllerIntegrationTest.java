@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.bookreviewapi.model.User;
 import com.example.bookreviewapi.model.UserRole;
 import com.example.bookreviewapi.repository.UserRepository;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,10 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-// This class is used for integration testing of the BookController
-
+@ActiveProfiles("test")
 @Transactional
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BookControllerIntegrationTest {
     
     @Autowired

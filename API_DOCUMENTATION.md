@@ -32,6 +32,28 @@ http://localhost:8080
 - `BookControllerIntegrationTest`: **complete & passing**
 - `ReviewControllerIntegrationTest`: **complete & passing**
 
+## Development Environment Setup
+
+### Quick Start (Dev Profile)
+When running with `spring.profiles.active=dev`, the application automatically creates a default admin user:
+
+- **Username:** `admin`
+- **Password:** `admin123`
+- **Email:** `admin@bookreview.com`
+
+### Testing Admin Features
+1. Start the application with dev profile: `mvn spring-boot:run -Dspring-boot.run.profiles=dev`
+2. Login with admin credentials: `POST /auth/login`
+3. Use the returned JWT token for admin-only endpoints (e.g., DELETE `/api/books/{id}`)
+
+### H2 Console Access
+- **URL:** `http://localhost:8080/h2-console`
+- **JDBC URL:** `jdbc:h2:mem:bookreviewdb`
+- **Username:** (empty)
+- **Password:** (empty)
+
+> **Security Note:** Change the default admin credentials immediately if using for anything beyond local development.
+
 ## Available Endpoints
 
 ### Book Management
