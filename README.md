@@ -49,9 +49,9 @@ docker run -d -p 8080:8080 --name shelf-speak-container shelf-speak-api
 
 ### Production (Azure)
 *Once deployed, the application will be accessible at:*
-- **API**: `https://your-app.azurewebsites.net/api/`
-- **Swagger UI**: `https://your-app.azurewebsites.net/swagger-ui.html`
-- **Health Check**: `https://your-app.azurewebsites.net/actuator/health`
+- **API**: `https://shelfspeak-dev-awckbxavbmbxejam.malaysiawest-01.azurewebsites.net/v3/api-docs`
+- **Swagger UI**: `https://shelfspeak-dev-awckbxavbmbxejam.malaysiawest-01.azurewebsites.net/swagger-ui/index.html`
+- **Health Check**: `https://shelfspeak-dev-awckbxavbmbxejam.malaysiawest-01.azurewebsites.net/actuator/health`
 
 ## 🔐 Authentication
 
