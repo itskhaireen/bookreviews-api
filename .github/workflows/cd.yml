@@ -25,13 +25,13 @@ jobs:
         echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
     - name: Build Docker image
-      run: docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:${{ github.sha }} .
+      run: docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:latest .
 
     - name: Push Docker image to ACR
-      run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:${{ github.sha }}
+      run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:latest
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-        images: ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:${{ github.sha }}
+        images: ${{ secrets.ACR_LOGIN_SERVER }}/shelf-speak-api:latest
